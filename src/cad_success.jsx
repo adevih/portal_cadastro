@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Link, Outlet, Route, BrowserRouter } from "react-router-dom";
-//import interno
+import React from "react";
 import "./App.css";
 import logo from "./logo.svg";
 
-function Home() {
+function CadSuccess() {
 	return (
 		<div className="App  bg-gray-200 w-screen">
 			{/* /* {Menu()} / */}
@@ -20,17 +18,10 @@ function Home() {
 							<img src={logo} className=" mb-0 " width="100" alt="logo" />
 						</div>
 						<div>
-							<h1 className=" text-slate-900">Seja bem vindo!</h1>
-						</div>
-						{/* Botão */}
-						<div className="flex justify-center mt-5">
-							<Link to={"/cadastro/1000"}>
-								<input
-									type="submit"
-									value="Comece por aqui!"
-									className="btt hover:dark:bg-slate-900 hover:text-white cursor-pointer transition-all delay-100 text-sm"
-								/>
-							</Link>
+							<h1 className=" text-slate-900 text-center">
+								Obrigado por se cadastrar!<br></br> Em breve, entraremos em
+								contato!
+							</h1>
 						</div>
 					</div>
 				</form>
@@ -39,4 +30,4 @@ function Home() {
 	);
 }
 
-export default Home;
+export default CadSuccess;

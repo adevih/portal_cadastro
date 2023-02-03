@@ -1,9 +1,14 @@
-import logo from "./logo.svg";
-import axios from "axios";
 import React, { useState } from "react";
+import { useSubmit, useLocation, useParams, Outlet } from "react-router-dom";
+import axios from "axios";
+// import interno
 import "./App.css";
+import logo from "./logo.svg";
+import { url, urlAll } from "./ur";
 
+// app
 function Cadastro() {
+	// Constantes do formulário
 	const [name, setName] = useState("");
 	const [sobrenome, setSobrenome] = useState("");
 	const [nascimento, setNascimento] = useState("");
@@ -20,99 +25,38 @@ function Cadastro() {
 	const [numEndereco, setNumEndereco] = useState("");
 	const [complemento, setComplemento] = useState("");
 	const [nacionalidade, setNacionaliade] = useState("brasil");
-	//
-	const [post, setPost] = React.useState("");
+	// state do evento change
 	useState("");
-	const urlString = window.location.href;
-	const urlS = new URL(urlString);
-	const urlID = urlS.searchParams.get("");
-	const url = process.env.url;
-
-	// VERIFICAÇÃO ID NULO / DESABILITAR CAMPO
-
-	var ativo = true;
-	function disabled() {
-		if (urlID == null) {
-			ativo = true;
-		} else {
-			ativo = false;
-		}
-	}
-
-	disabled();
-	console.log(ativo);
-	console.log(urlID);
-	//
-
-	const baseURL = url + urlID;
-	//
+	//constante que chamo no useEffect
+	const [post, setPost] = React.useState("");
+	//constante do evento de rota na hora do submit
+	const submit = useSubmit();
+	//constantes da url dinamica
+	const { id } = useParams();
+	const baseURL = url + id;
+	// verificação pra saber se o id que puxo na url existe na rota e bloquear os campos do form de acordo com o resultado
+	const ativo = !post ? true : false;
+	//useEffect com get usando axios para validar minha url e puxar os dados do json na minha api
 	React.useEffect(() => {
 		axios.get(baseURL).then((response) => {
 			setPost(response.data[0]);
 		});
 	}, []);
 
-	//atualizar o nome com o valor do campo
-	const handleNomeChange = (e) => {
-		setName(e.target.value);
-	};
-	const handleSobrenomeChange = (e) => {
-		setSobrenome(e.target.value);
-	};
-	const handleNascimentoChange = (e) => {
-		setNascimento(e.target.value);
-	};
-	const handleSexoChange = (e) => {
-		setSexo(e.target.value);
-	};
-	const handleRgChange = (e) => {
-		setRg(e.target.value.replace(/\D/g, ""));
-	};
-	const handleCpfChange = (e) => {
-		setCpf(e.target.value.replace(/\D/g, ""));
-	};
-	const handleCelChange = (e) => {
-		setCel(e.target.value.replace(/\D/g, ""));
-	};
-	const handleEmailChange = (e) => {
-		setEmail(e.target.value);
-	};
-	const handleNacionalidadeChange = (e) => {
-		setNacionaliade(e.target.value);
-	};
-	const handleEstadoCivilChange = (e) => {
-		setEstadoCivil(e.target.value);
-	};
-	const handleCepChange = (e) => {
-		setCep(e.target.value.replace(/\D/g, ""));
-	};
-	const handleEstadoChange = (e) => {
-		setEstado(e.target.value);
-	};
-	const handleCidadeChange = (e) => {
-		setCidade(e.target.value);
-	};
-	const handleEnderecoChange = (e) => {
-		setEndereco(e.target.value);
-	};
-	const handleNumEnderecoChange = (e) => {
-		setNumEndereco(e.target.value.replace(/\D/g, ""));
-	};
+	//usando axios get e post pra validação e envio do form
+	async function getCpf() {
+		// Validando o cpf digitado e checar se já existe na rota da api
+		try {
+			const response = await axios.get(urlAll);
+			const data = response.data;
 
-	const handleComplementoChange = (e) => {
-		// Texto que só aceita numero
-		setComplemento(e.target.value);
-	};
-
-	// const list = {
-	// 	masculino: "masculino",
-	// 	feminino: "feminino",
-	// 	outros: "outros",
-	// };
-
-	const handleSubmit = (e) => {
-		axios
-			.post(url, {
+			const existingData = data.find(superdata);
+			if (existingData) {
+				alert("O CPF digitado já existe!");
+				return;
+			}
+			//Se o cpf não existir na rota, acontece o envio da requisição pra rota da api
+			const postResponse = await axios.post(url, {
 				rede_prim: post.id,
 				rede_rank: parseFloat(post.rede_rank) + 1,
 				nome: name,
@@ -131,18 +75,88 @@ function Cadastro() {
 				endereco: endereco,
 				num_endereco: numEndereco,
 				complemento: complemento,
-			})
-			.then((response) => {
-				setPost(response.data);
 			});
 
-		alert("Cadastro efetuado!");
-		window.location.reload();
-		e.preventDefault();
+			setPost(postResponse.data);
+			// submit da minha rota de navegação da url com o react router, caso o envio seja feito, ocorre o redirecionamento da pagina
+			submit(null, {
+				action: "cadastro/success",
+			});
+		} catch (error) {
+			console.error(error);
+		}
+	}
+	//evento onchange pra pegar os dados nos inputs do form
+	const handleChange = (fieldName) => (e) => {
+		switch (fieldName) {
+			case "name":
+				setName(e.target.value);
+				break;
+			case "sobrenome":
+				setSobrenome(e.target.value);
+				break;
+			case "nascimento":
+				setNascimento(e.target.value);
+				break;
+			case "sexo":
+				setSexo(e.target.value);
+				break;
+			case "rg":
+				setRg(e.target.value.replace(/\D/g, ""));
+				break;
+			case "cpf":
+				setCpf(e.target.value.replace(/\D/g, ""));
+				break;
+			case "cel":
+				setCel(e.target.value.replace(/\D/g, ""));
+				break;
+			case "email":
+				setEmail(e.target.value);
+				break;
+			case "nacionalidade":
+				setNacionaliade(e.target.value);
+				break;
+			case "estadoCivil":
+				setEstadoCivil(e.target.value);
+				break;
+			case "cep":
+				setCep(e.target.value.replace(/\D/g, ""));
+				break;
+			case "estado":
+				setEstado(e.target.value);
+				break;
+			case "cidade":
+				setCidade(e.target.value);
+				break;
+			case "endereco":
+				setEndereco(e.target.value);
+				break;
+			case "numEndereco":
+				setNumEndereco(e.target.value.replace(/\D/g, ""));
+				break;
+			case "complemento":
+				setComplemento(e.target.value);
+				break;
+			default:
+				break;
+		}
 	};
 
+	//envio do form
+	const handleSubmit = (e) => {
+		e.preventDefault();
+		// função async que criei acima
+		getCpf();
+	};
+
+	//checa o valor de cpf pra ser validado no try da função acima.
+	function superdata(omegadata) {
+		return omegadata.cpf === cpf;
+	}
+
+	//
 	return (
-		<div className="App  bg-gray-200">
+		<div className="App  bg-gray-200 w-screen min-w-full">
 			{/* {Menu()} */}
 			<header className="App-header">
 				<form
@@ -152,27 +166,9 @@ function Cadastro() {
 					}}
 				>
 					<div className="flex flex-col justify-center items-center m-10">
-						{/* <h2 className="text-black">Portal Geah</h2> */}
-						<a>
-							<img src={logo} className=" mb-0 " width="100" alt="logo" />
-						</a>
+						<img src={logo} className=" mb-0 " width="100" alt="logo" />
+						<h2 className="text-black">Portal Cadastro</h2>
 					</div>
-					{/* Puxando Consultor que mandou o convite */}
-					{/* <input
-						className="txt m-3 text-black"
-						placeholder="{...}"
-						value={urlID}
-						disabled
-					/>
-					<br />  */}
-					{/*  */}
-					{/* <input
-						className="txt m-3"
-						placeholder="..."
-						value={post.nome + " " + post.sobrenome}
-						disabled
-					/>
-					<br />
 
 					{/* Novo Consultor */}
 
@@ -187,10 +183,9 @@ function Cadastro() {
 								className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-black dark:border-gray-600 dark:focus:border-blue-900 focus:outline-none focus:ring-0 focus:border-blue-900 peer"
 								placeholder=" "
 								value={name}
+								maxLength={80}
 								required
-								onChange={(e) => {
-									handleNomeChange(e);
-								}}
+								onChange={handleChange("name")}
 							/>
 							<label
 								htmlFor="floating_nome"
@@ -209,10 +204,9 @@ function Cadastro() {
 								className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-black dark:border-gray-600 dark:focus:border-blue-900 focus:outline-none focus:ring-0 focus:border-blue-900 peer"
 								placeholder=" "
 								value={sobrenome}
+								maxLength={80}
 								required
-								onChange={(e) => {
-									handleSobrenomeChange(e);
-								}}
+								onChange={handleChange("sobrenome")}
 							/>
 							<label
 								htmlFor="floating_sobrenome"
@@ -237,9 +231,7 @@ function Cadastro() {
 								placeholder=" "
 								value={rg}
 								required
-								onChange={(e) => {
-									handleRgChange(e);
-								}}
+								onChange={handleChange("rg")}
 							/>
 							<label
 								htmlFor="floating_rg"
@@ -260,9 +252,7 @@ function Cadastro() {
 								placeholder=" "
 								value={cpf}
 								required
-								onChange={(e) => {
-									handleCpfChange(e);
-								}}
+								onChange={handleChange("cpf")}
 							/>
 							<label
 								htmlFor="floating_cpf"
@@ -287,9 +277,7 @@ function Cadastro() {
 								placeholder=" "
 								value={nascimento}
 								required
-								onChange={(e) => {
-									handleNascimentoChange(e);
-								}}
+								onChange={handleChange("nascimento")}
 							/>
 							<label
 								htmlFor="floating_data"
@@ -307,9 +295,7 @@ function Cadastro() {
 								className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-black dark:border-gray-600 dark:focus:border-blue-900 focus:outline-none focus:ring-0 focus:border-blue-900 peer"
 								required
 								value={sexo}
-								onChange={(e) => {
-									handleSexoChange(e);
-								}}
+								onChange={handleChange("sexo")}
 							>
 								<option value="masculino">Masculino</option>
 								<option value="feminino">Feminino</option>
@@ -332,9 +318,7 @@ function Cadastro() {
 								placeholder=" "
 								required
 								value={estadoCivil}
-								onChange={(e) => {
-									handleEstadoCivilChange(e);
-								}}
+								onChange={handleChange("estadoCivil")}
 							>
 								<option value="solteiro">Solteiro</option>
 								<option value="casado">Casado</option>
@@ -356,9 +340,7 @@ function Cadastro() {
 								placeholder=" "
 								required
 								value={nacionalidade}
-								onChange={(e) => {
-									handleNacionalidadeChange(e);
-								}}
+								onChange={handleChange("nacionalidade")}
 							>
 								<option value="brasil">Brasil</option>
 								<option value="outros">Outros</option>
@@ -389,9 +371,7 @@ function Cadastro() {
 								placeholder=" "
 								value={cep}
 								required
-								onChange={(e) => {
-									handleCepChange(e);
-								}}
+								onChange={handleChange("cep")}
 							/>
 							<label
 								htmlFor="floating_cep"
@@ -412,9 +392,7 @@ function Cadastro() {
 								placeholder=" "
 								value={estado}
 								required
-								onChange={(e) => {
-									handleEstadoChange(e);
-								}}
+								onChange={handleChange("estado")}
 							/>
 							<label
 								htmlFor="floating_estado"
@@ -435,9 +413,7 @@ function Cadastro() {
 								placeholder=" "
 								value={cidade}
 								required
-								onChange={(e) => {
-									handleCidadeChange(e);
-								}}
+								onChange={handleChange("cidade")}
 							/>
 							<label
 								htmlFor="floating_cidade"
@@ -462,9 +438,7 @@ function Cadastro() {
 								placeholder=" "
 								value={endereco}
 								required
-								onChange={(e) => {
-									handleEnderecoChange(e);
-								}}
+								onChange={handleChange("endereco")}
 							/>
 							<label
 								htmlFor="floating_endereco"
@@ -485,9 +459,7 @@ function Cadastro() {
 								placeholder=" "
 								required
 								value={numEndereco}
-								onChange={(e) => {
-									handleNumEnderecoChange(e);
-								}}
+								onChange={handleChange("numEndereco")}
 							/>
 							<label
 								htmlFor="floating_numero"
@@ -508,9 +480,7 @@ function Cadastro() {
 								placeholder=" "
 								value={complemento}
 								required
-								onChange={(e) => {
-									handleComplementoChange(e);
-								}}
+								onChange={handleChange("complemento")}
 							/>
 							<label
 								htmlFor="floating_complemento"
@@ -533,10 +503,9 @@ function Cadastro() {
 								className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-black dark:border-gray-600 dark:focus:border-blue-900 focus:outline-none focus:ring-0 focus:border-blue-900 peer"
 								placeholder=" "
 								value={email}
+								maxLength={80}
 								required
-								onChange={(e) => {
-									handleEmailChange(e);
-								}}
+								onChange={handleChange("email")}
 							/>
 							<label
 								htmlFor="floating_email"
@@ -557,9 +526,7 @@ function Cadastro() {
 								placeholder=" "
 								required
 								value={cel}
-								onChange={(e) => {
-									handleCelChange(e);
-								}}
+								onChange={handleChange("cel")}
 							/>
 							<label
 								htmlFor="floating_cel"
